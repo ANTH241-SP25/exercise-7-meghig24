@@ -27,17 +27,28 @@ library(dunn.test)
 3. T-tests compare the variation of a continuous variable across two levels of a categorical (nominal and ordinal) variable. 
 ```{r}
 #3a. What are the means, standard deviations, and counts for BMI by gender?
+NHANESdata %>% 
+  drop_na(BMI) %>% 
+  group_by(Gender) %>% 
+  summarize(mean(BMI), sd(BMI), count=n())
 
 #Let's hypothesize that there is a significant difference in BMI by gender in the NHANES 2017-2018 sample. What is the null hypothesis? What is the alternative hypothesis? We will test this hypothesis using the method shown in S&B, section 7.1.2
 #1. histogram of continuous variable: hist(data$contvar)
+hist(NHANESdata$BMI)
 
 #2. F-test to see if the variance in the continuous variable is the same for the different levels of the categorical variable: 
 #var.test(Contvar~Catvar, data=, alternative="two.sided")
+var.test(BMI~Gender, data=NHANESdata, alternative="two.sided")
 
 #3. According to S&B, if the variances are not equal, we should run the T-test anyways: t.test(Contvar~Catvar, var.equal=FALSE, data=)
+t.test(BMI~Gender, var.equal=FALSE, data=NHANESdata)
 
 ```
 Question: Does the above T-test support the null hypothesis or the alternative hypothesis?
+*t-test statistic=4.47
+*df=degrees of freedom (above is a huge sample size, the higher the df is, the more precise the data/analysis is going to be)
+*p-value: "probability value"; tells you whether this is significant or not; sometimes set up that </= to 0.05 means that the means are more than 95% sure that the means are significantly equivalent to each other
+Because our p-value is 0.000008085, the means are statistically significant. The factor that is making this so strong is the huge sample size. 
 
 ```{r}
 #3b: Does the amount of daily sedentary time differ in people with and without health insurance? What is the null hypothesis? What is the alternative hypothesis?
