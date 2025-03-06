@@ -62,16 +62,46 @@ NHANES_healthins%>%
   summarize(mean(BMI), sd(BMI), count=n())
 #2. Run a test to see if the variances of the continuous variable are equal across different levels of the categorical variable:
 #var.test(Contvar~Catvar, data=, alternative="two.sided")
+var.test(BMI~HealthIns, data=NHANES_healthins, alternative="two.sided")
 
 #3. We will run the T-test with the following code:
 #t.test(Contvar~Catvar, var.equal=TRUE, data=)
+t.test(BMI~HealthIns, var.equal=TRUE, data=NHANES_healthins)
 
 ```
 Does the above T-test support or refute the alternative hypothesis?
+The above t-test does support the alternative hypothesis because the p-value, 4.798e-13 < 0.05. 
+
+3b: Sedentary and health insurance
+```{r}
+#1 filter out 7777's and 9999's from Sedentary (keep responses <1321)
+NHANES_sedentary <- NHANES_healthins %>% 
+  filter(Sedentary <1321)
+
+#2 descriptive statistics of Sedentary grouped by health insurance:
+NHANES_sedentary %>% 
+  drop_na(Sedentary) %>% 
+  group_by(HealthIns) %>% 
+  summarize(mean(Sedentary), sd(Sedentary), count=n())
+#3 Test to see is the variances of the continuous variable are equal across different levels of the categorical variable: var.test(Contvar~Catvar, data=, alternative="two.sided")
+var.test(Sedentary~HealthIns, data=NHANES_sedentary, alternative="two.sided")
+
+#4 t-test: t.test(Contvar~Catvar, var.equal=FALSE, data=, na.rm=TRUE)
+t.test(Sedentary~HealthIns, var.equal=FALSE, data=NHANES_sedentary, na.rm=TRUE)
+```
 
 3c. Generate a hypothesis that tests if daily caloric intake differs in people who identify as female from people who identify as male. What are the null and alternative hypotheses? Run a T-test by replicating the methods above. What are your results? Do your results support or refute the alternative hypothesis?
+```{r}
+#a. descriptive statistics of DR1TKCAL by gender:
+
+#b. test for homogeneity of continuous varibale across categorical variable: var.test(Contvar~Catvar, data=, alternative="two.sided")
+
+#c. t.test...
+```
+
 
 4. Testing for significant differences in a continuous variable across three or more categorical levels. Both S&B and Kabacoff introduce you to analysis of variance (ANOVA) as the statistical method to make these comparisons. What they show you is all good. However, I would like to introduce you to a non-parametric test that is more appropriate to the NHANES data as it applies to variables that are not normally distributed. This method is similar to ANOVA, it is easy to implement, and it provides results that are easy to interpret. 
+
 
 The non-parametric statistical test that is a substitute for ANOVA is called the Kruskal-Wallis test. It shows if there is a significant difference in the means and variance of a continuous variable across three or more categorical levels when the continuous variable is not normally distributed. After the Kruskal-Wallis test, a post-hoc test called the Dunn Test, identifies the specific bivariate comparisons that significantly differ from each other.
 
@@ -79,23 +109,68 @@ Here is an example:
 ```{r}
 #4a. Does daily caloric intake differ by BMI categories? What is the null hypothesis? What is the alternative hypothesis?
 #1. Generate summary statistics of daily caloric intake by BMI cateogories?
+NHANESdata %>% 
+  drop_na(DR1TKCAL) %>% 
+  group_by(BMIcat) %>% 
+  summarize(mean(DR1TKCAL), sd(DR1TKCAL), count=n())
 
 #2. Generate a boxplot of daily caloric intake by BMI categories to visualize the summary statistics
+ggplot(NHANESdata, aes(x=BMIcat, y=DR1TKCAL))+
+  geom_boxplot(fill="darkgreen")+
+  labs(x="BMI category",
+       y="calories consumer per day",
+       title="Daily Calories by BMIcat")
 
 #3. Run the Kruskal-Wallis test and the post-hoc Dunn test to see if there are any significant differences in daily caloric intake by BMI categories. The code for the Kruskal-Wallis and Dunn test is: 
 #dunn.test(x=data$contvar, g=data$catvar, kw=TRUE)
+dunn.test(x=NHANESdata$DR1TKCAL, g=NHANESdata$BMIcat, kw=TRUE)
 
 ```
 Does the above test support or refute the alternative hypothesis? If it supports the alternative hypothesis, which categorical levels significantly differ from each other? Explain your findings.
+Supports the alternative hypothesis but it also shows that more specifically, the underweight category is the one that significantly differs from the other categories and differs in the caloric intake per day. 
 
 ```{r}
 #4b. Does the ratio of monthly income to poverty differ by the head of household's education level? What is the null hypothesis? What is the alternative hypothesis?
 #1. Generate descriptive statistics of RFITP by HHEducation levels?
+NHANESdata %>% 
+  drop_na(RFITP) %>% 
+  group_by(HHEducation) %>% 
+  summarize(mean(RFITP), sd(RFITP), count=n())
 
 #2. Run the Kruskal-Wallis and Dunn tests:
-
+dunn.test(x=NHANESdata$RFITP, g=NHANESdata$HHEducation, kw=TRUE)
 ```
 Explain your results here.
+The results accept the null hypothesis because the p-value is less than 0.05. 
 
 #5. Run your own Kruskal-Wallis and Dunn test below based on comparing a continuous variable across a nominal or ordinal variable with three or more levels. Show your work in the code chunk and interpret your findings.
+```{r}
+NHANESdata %>% 
+  drop_na(DR1TSUGR) %>% 
+  group_by(FeelBad) %>% 
+  summarize(mean(DR1TSUGR), sd(DR1TSUGR), count=n())
+dunn.test(x=NHANESdata$DR1TSUGR, g=NHANESdata$FeelBad, kw=TRUE)
+```
 
+
+Let's test whether age varies by gender in the NHANES sample. What is the null hypothesis? What is the alternative hypothesis?
+*continuous variable: age
+*categorical: gender
+```{r}
+#1. histogram of continuous variable: hist(data$contvar)
+hist(NHANESdata$Age)
+
+#2. What are the means, standard deviations, and counts for age by gender?
+NHANESdata %>% 
+  drop_na(Age) %>% 
+  group_by(Gender) %>% 
+  summarize(mean(Age), sd(Age), count=n())
+
+#3. F-test to see if the variance in the continuous variable is the same for the different levels of the categorical variable: 
+#var.test(Contvar~Catvar, data=, alternative="two.sided")
+var.test(Age~Gender, data=NHANESdata, alternative="two.sided")
+
+#4. Run the T-test: t.test(Contvar~Catvar, var.equal=FALSE, data=)
+t.test(Age~Gender, var.equal=TRUE, data=NHANESdata)
+```
+T-test refuses the alternative hypothesis
